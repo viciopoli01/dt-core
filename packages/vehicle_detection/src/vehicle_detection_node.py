@@ -36,12 +36,16 @@ class VehicleDetectionNode(DTROS):
     def __init__(self, node_name):
 
         # Initialize the DTROS parent class
-        super(VehicleDetectionNode, self).__init__(node_name=node_name, node_type=NodeType.PERCEPTION)
+        super(VehicleDetectionNode, self).__init__(
+            node_name=node_name, node_type=NodeType.PERCEPTION)
 
         # Initialize the parameters
-        self.process_frequency = DTParam("~process_frequency", param_type=ParamType.FLOAT)
-        self.circlepattern_dims = DTParam("~circlepattern_dims", param_type=ParamType.LIST)
-        self.blobdetector_min_area = DTParam("~blobdetector_min_area", param_type=ParamType.FLOAT)
+        self.process_frequency = DTParam(
+            "~process_frequency", param_type=ParamType.FLOAT)
+        self.circlepattern_dims = DTParam(
+            "~circlepattern_dims", param_type=ParamType.LIST)
+        self.blobdetector_min_area = DTParam(
+            "~blobdetector_min_area", param_type=ParamType.FLOAT)
         self.blobdetector_min_dist_between_blobs = DTParam(
             "~blobdetector_min_dist_between_blobs", param_type=ParamType.FLOAT
         )
@@ -57,20 +61,24 @@ class VehicleDetectionNode(DTROS):
         self.last_stamp = rospy.Time.now()
 
         # Subscriber
-        self.sub_image = rospy.Subscriber("~image/compressed", CompressedImage, self.cb_image, queue_size=1)
+        self.sub_image = rospy.Subscriber(
+            "~image/compressed", CompressedImage, self.cb_image, buff_size="10M", queue_size=1)
 
         # Publishers
-        self.pub_centers = rospy.Publisher("~centers", VehicleCorners, queue_size=1)
+        self.pub_centers = rospy.Publisher(
+            "~centers", VehicleCorners, queue_size=1)
         self.pub_circlepattern_image = rospy.Publisher(
             "~debug/detection_image/compressed", CompressedImage, queue_size=1
         )
-        self.pub_detection_flag = rospy.Publisher("~detection", BoolStamped, queue_size=1)
+        self.pub_detection_flag = rospy.Publisher(
+            "~detection", BoolStamped, queue_size=1)
         self.log("Initialization completed.")
 
     def cbParametersChanged(self):
 
         # TODO: THIS DOESN'T WORK WITH THE NEW DTROS!!!
-        self.publish_duration = rospy.Duration.from_sec(1.0 / self.process_frequency.value)
+        self.publish_duration = rospy.Duration.from_sec(
+            1.0 / self.process_frequency.value)
         params = cv2.SimpleBlobDetector_Params()
         params.minArea = self.blobdetector_min_area.value
         params.minDistBetweenBlobs = self.blobdetector_min_dist_between_blobs.value
@@ -88,8 +96,6 @@ class VehicleDetectionNode(DTROS):
 
         """
 
-        rospy.loginfo("IMAGE RECEIVED")
-        
         now = rospy.Time.now()
         if now - self.last_stamp < self.publish_duration:
             return
@@ -133,7 +139,8 @@ class VehicleDetectionNode(DTROS):
         self.pub_centers.publish(vehicle_centers_msg_out)
         self.pub_detection_flag.publish(detection_flag_msg_out)
         if self.pub_circlepattern_image.get_num_connections() > 0:
-            cv2.drawChessboardCorners(image_cv, tuple(self.circlepattern_dims.value), centers, detection)
+            cv2.drawChessboardCorners(image_cv, tuple(
+                self.circlepattern_dims.value), centers, detection)
             image_msg_out = self.bridge.cv2_to_compressed_imgmsg(image_cv)
             self.pub_circlepattern_image.publish(image_msg_out)
 

@@ -41,7 +41,7 @@ class FSMNode:
         for node_name, topic_name in list(nodes.items()):
             # self.pub_dict[node_name] = rospy.Publisher(topic_name, BoolStamped, queue_size=1, latch=True)
             try:
-                rospy.wait_for_service(topic_name, timeout = 2.0)
+                rospy.wait_for_service(topic_name, timeout = 10.0)
                 self.pub_dict[node_name] = rospy.ServiceProxy(topic_name, SetBool)
             except rospy.ROSException as exc:
                 rospy.loginfo("Time exceeded: " + str(exc))
@@ -101,9 +101,7 @@ class FSMNode:
         for state, state_dict in list(states_dict.items()):
             # Validate the existence of all reachable states
             transitions_dict = state_dict.get("transitions")
-            if transitions_dict is None:
-                continue
-            else:
+            if transitions_dict is None:timeout = 2.0
                 for transition, next_state in list(transitions_dict.items()):
                     if next_state not in valid_states:
                         rospy.logerr(
